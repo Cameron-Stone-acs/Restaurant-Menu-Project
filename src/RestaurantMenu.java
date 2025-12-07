@@ -4,8 +4,9 @@ P4
 12/4/2025
 did not work with teammate because they used AI to do all the programming.
 */
+import java.io.*;
 import java.util.Scanner;
-
+import java.util.ArrayList;
 public class RestaurantMenu {
     static Object[][] food =
             {//{Food Name, Description, Price}
@@ -20,11 +21,14 @@ public class RestaurantMenu {
                     {"Gnocchi", "potato dumpling covered in a rich butter sauce with speck", 17.99},
                     {"Spaghetti and Meatballs", "Classic spaghetti and Meatballs with a rich tomato sauce", 12.99},
             };
+    static String user;
+    static double balence;
+    static Scanner scan = new Scanner(System.in);
+    static String restaurantName = "giardino degli ulivi"; //Olive Garden in italian
+    static  ArrayList<String> order = new ArrayList<String>(); //Current order
     public static void main(String[] args)
     {
-        Scanner scan = new Scanner(System.in);
-        String restaurantName = "giardino degli ulivi"; //Olive Garden in italian
-        String[] order = new String[1]; //Current order
+
         double tax = 8.38; //Tax rate
         double taxTotal = 0; //Total tax in dollars
         double subTotal = 0; //Price before tax
@@ -32,48 +36,252 @@ public class RestaurantMenu {
         double cashAmount = 0; //Amount of cash given
         double cashBack = 0; //Cash to give back
         int orderQuantity = 0; //How many of an item to add to order
-        Object input;
+        String input;
         ColoredPrintln(restaurantName, "green");
-        System.out.println();
         ColoredPrint("welcome to the ", "green");
         ColoredPrintln("Restaurant Ordering System", "red");
-        System.out.println();
+        signIn();
+    }
+    private static void signIn()
+    {
+        ArrayList<String> accounts = new ArrayList<String>();
+        String tempUsername = "";
+        String tempPassword = "";
+        String input;
+        boolean valid = false;
+        boolean file = true;
+        try
+        {
+            Scanner reader = new Scanner(new File("Accounts.txt"));
+            for (int i = 0; reader.hasNextLine(); i++)
+            {
+                accounts.add(reader.nextLine());
+            }
+            reader.close();
+        }
+        catch (FileNotFoundException e)
+        {
+            file = false;
+        }
+        boolean loop = true;
+        while (loop)
+        {
+            if (file)
+            {
+                System.out.print("Would you like to sign in or create a new account ");
+                ColoredPrint("1/2: ", "blue");
+            }
+            else
+            {
+                System.out.print("Would you like to create a new account ");
+                ColoredPrint("y/n: ", "blue");
+            }
+            input = scan.next();
+            switch (input)
+            {
+                case "1" ->
+                {
+                    while (!valid)
+                    {
+                        loop = false;
+                        ColoredPrint("Please enter your username: ", "blue");
+                        tempUsername = scan.next();
+                        ColoredPrint("Please enter your password: ", "blue");
+                        tempPassword = scan.next();
+                        for (int i = 0; i < accounts.size(); i++)
+                        {
+                            if (tempUsername.equals(accounts.get(i)) && !valid && tempPassword.equals(accounts.get(i+1)))
+                            {
+                                valid = true;
+                                user = accounts.get(i);
+                                balence = Double.parseDouble(accounts.get(i+2));
+                                break;
+                            }
+                        }
+                        if(!valid) ColoredPrintln("Wrong username or password, please try again:", "red");
+                    }
+                }
+                case "2", "y", "Y" ->
+                {
+                    ColoredPrint("Please enter your username: ", "blue");
+                    tempUsername = scan.next();
+                    ColoredPrint("Please enter your password: ", "blue");
+                    tempPassword = scan.next();
+                    FileManager(tempUsername, true);
+                    FileManager(tempPassword, true);
+                    FileManager("", false);
+                    file = true;
+                    accounts.add(tempUsername);
+                    accounts.add(tempPassword);
+                    accounts.add("0");
+                }
+                case "n", "N" ->
+                {
+                    ColoredPrint("Thank you for using the ", "green");
+                    ColoredPrintln("Restaurant Ordering System", "red");
+                    System.exit(0);
+                }
+                default ->
+                {
+                    ColoredPrintln("error please try again", "red");
+                }
+            }
+        }
+        System.out.print("Welcome ");
+        ColoredPrintln(user, "green");
+        loop = true;
+        while (loop)
+        {
+            System.out.print("Would you like to continue to ordering, add funds, or exit ");
+            ColoredPrintln("1/2/3: ", "blue");
+            input = scan.next();
+            switch (input)
+            {
+                case "1" ->
+                {
+                    ColoredPrintln(restaurantName, "green");
+                    loop = false;
+                    Menu();
+                }
+                case "2" ->
+                {
+                    System.out.println("Balance: $" + balence);
+                    valid = false;
+                    while (!valid)
+                    {
+                        ColoredPrint("please input the amount you would like to add: ", "blue");
+                        input = scan.next();
+                        try
+                        {
+                            balence += Double.parseDouble(input);
+                            valid = true;
+                        }
+                        catch (NumberFormatException e)
+                        {
+                            ColoredPrintln("error please try again", "red");
+                        }
+                        System.out.println("Balance: $" + balence);
+                    }
+
+                }
+                case "3" ->
+                {
+                    ColoredPrint("Thank you for using the ", "green");
+                    ColoredPrintln("Restaurant Ordering System", "red");
+                    for(int i = 0; i < accounts.size(); i++)
+                    {
+                        if (user.equals(accounts.get(i)))
+                        {
+                            accounts.add(i+2, String.valueOf(balence));
+                            accounts.remove(i+3);
+                        }
+                    }
+                    FileManager("null", true);
+                    for (int i = 0; i < accounts.size(); i++)
+                    {
+                        FileManager(accounts.get(i), false);
+                    }
+                    System.exit(0);
+                }
+                default ->
+                {
+                    ColoredPrintln("error please try again", "red");
+                }
+            }
+        }
+    }
+    private static void FileManager(String txt, boolean wipe)
+    {
+        try
+        {
+            File accounts =  new File("Accounts.txt");
+            FileWriter fw = new FileWriter(accounts, true);
+            if(!txt.equals("null"))
+            {
+                ColoredPrintln("data writin", "green");
+                fw.write(txt + "\n");
+
+            }
+            fw.flush();
+            fw.close();
+            if(wipe)
+            {
+                new FileOutputStream("Accounts.txt").close();
+            }
+        }
+        catch (Exception e)
+        {
+            ColoredPrintln("There was an error when trying to write to file", "red");
+            System.exit(0);
+        }
+    }
+
+    private static void Menu()
+    {
+        String input;
+        Integer numInput;
+        boolean loop = true;
+        boolean check = true;
         for (int i = 0; i < food.length; i++)
         {
             ColoredPrint(i + 1 + ":" + food[i][0].toString(), "blue");
             System.out.println(", "+ food[i][1].toString() + ":");
             ColoredPrintln("$" + food[i][2].toString(), "yellow");
         }
-        System.out.println();
-        System.out.println("Please input your order using the number or name:");
-        boolean done = false;
-        while (!done)
+        boolean error = false;
+        while(loop)
         {
-            boolean valid = false;
-            input = scan.nextLine();
+            if (error)
+            {
+                ColoredPrintln("error please try again", "red");
+                error = false;
+            }
+            else ColoredPrintln("Please enter the item number to add it to your order:", "blue");
+            numInput = scan.nextInt();
             for (int i = 0; i < food.length; i++)
             {
-                if (input.toString().equals(food[0][i]) || input - 1 == i)
+                error = true;
+                if (numInput - 1 == i)
                 {
-                    valid = true;
-                    System.out.println(food[0][i] + " added to order");
-                    for (int j = 0; j < order.length; j++)
-                    {
-                        if (order[j] != null) order[j] = food[0][i].toString();
-                    }
+                    order.add(food[i][0].toString());
+                    ColoredPrintln(food[i][0].toString() + " added", "green");
+                    error = false;
                     break;
                 }
             }
-            if (!valid)
+            if (!error)
             {
-                System.out.println("Please input a valid item using the number or name:");
-            }
-            else if (valid)
-            {
-                System.out.print("Would you like to add another item to your order?: ");
-                ColoredPrintln("y/n", "blue");
+                System.out.print("would you like to continue to payment or add another item ");
+                ColoredPrintln("1/2:", "blue");
+                while(check)
+                {
+                    input = scan.nextLine();
+                    switch (input)
+                    {
+                        case "1" ->
+                        {
+                            check = false;
+                            loop = false;
+                            order();
+                        }
+                        case "2" ->
+                        {
+                            check = false;
+                        }
+                        default -> ColoredPrintln("error please try again", "red");
+                    }
+                }
+
             }
         }
+
+    }
+    private static void order()
+    {
+
+    }
+    private static void receipt()
+    {
 
     }
     //Prints inputted text in a chosen color using ansi escape codes
@@ -99,6 +307,4 @@ public class RestaurantMenu {
         if (color.equalsIgnoreCase("cyan")) {System.out.print("\u001B[36m" + txt + "\u001B[0m");}
         if (color.equalsIgnoreCase("white")) {System.out.print("\u001B[37m" + txt + "\u001B[0m");}
     }
-    //Clears the console
-    private static void ClearScreen() {System.out.print("\033[2J");}
 }
