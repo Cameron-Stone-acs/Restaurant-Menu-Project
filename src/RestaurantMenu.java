@@ -22,32 +22,19 @@ public class RestaurantMenu {
                     {"Spaghetti and Meatballs", "Classic spaghetti and Meatballs with a rich tomato sauce", 12.99},
             };
     static String user;
-    static double balence;
+    static double balance;
     static Scanner scan = new Scanner(System.in);
     static String restaurantName = "giardino degli ulivi"; //Olive Garden in italian
+    static ArrayList<String> accounts = new ArrayList<String>();
     static  ArrayList<String> order = new ArrayList<String>(); //Current order
     public static void main(String[] args)
     {
-
-        double tax = 8.38; //Tax rate
-        double taxTotal = 0; //Total tax in dollars
-        double subTotal = 0; //Price before tax
-        double Total = 0; //Price after tax
-        double cashAmount = 0; //Amount of cash given
-        double cashBack = 0; //Cash to give back
-        int orderQuantity = 0; //How many of an item to add to order
         String input;
         ColoredPrintln(restaurantName, "green");
         ColoredPrint("welcome to the ", "green");
         ColoredPrintln("Restaurant Ordering System", "red");
-        signIn();
-    }
-    private static void signIn()
-    {
-        ArrayList<String> accounts = new ArrayList<String>();
         String tempUsername = "";
         String tempPassword = "";
-        String input;
         boolean valid = false;
         boolean file = true;
         try
@@ -94,7 +81,7 @@ public class RestaurantMenu {
                             {
                                 valid = true;
                                 user = accounts.get(i);
-                                balence = Double.parseDouble(accounts.get(i+2));
+                                balance = Double.parseDouble(accounts.get(i+2));
                                 break;
                             }
                         }
@@ -145,7 +132,7 @@ public class RestaurantMenu {
                 }
                 case "2" ->
                 {
-                    System.out.println("Balance: $" + balence);
+                    System.out.println("Balance: $" + balance);
                     valid = false;
                     while (!valid)
                     {
@@ -153,35 +140,20 @@ public class RestaurantMenu {
                         input = scan.next();
                         try
                         {
-                            balence += Double.parseDouble(input);
+                            balance += Double.parseDouble(input);
                             valid = true;
                         }
                         catch (NumberFormatException e)
                         {
                             ColoredPrintln("error please try again", "red");
                         }
-                        System.out.println("Balance: $" + balence);
+                        System.out.println("Balance: $" + balance);
                     }
 
                 }
                 case "3" ->
                 {
-                    ColoredPrint("Thank you for using the ", "green");
-                    ColoredPrintln("Restaurant Ordering System", "red");
-                    for(int i = 0; i < accounts.size(); i++)
-                    {
-                        if (user.equals(accounts.get(i)))
-                        {
-                            accounts.add(i+2, String.valueOf(balence));
-                            accounts.remove(i+3);
-                        }
-                    }
-                    FileManager("null", true);
-                    for (int i = 0; i < accounts.size(); i++)
-                    {
-                        FileManager(accounts.get(i), false);
-                    }
-                    System.exit(0);
+                    exit();
                 }
                 default ->
                 {
@@ -196,18 +168,10 @@ public class RestaurantMenu {
         {
             File accounts =  new File("Accounts.txt");
             FileWriter fw = new FileWriter(accounts, true);
-            if(!txt.equals("null"))
-            {
-                ColoredPrintln("data writin", "green");
-                fw.write(txt + "\n");
-
-            }
+            if(!txt.equals("null")) fw.write(txt + "\n");
             fw.flush();
             fw.close();
-            if(wipe)
-            {
-                new FileOutputStream("Accounts.txt").close();
-            }
+            if(wipe) new FileOutputStream("Accounts.txt").close();
         }
         catch (Exception e)
         {
@@ -219,7 +183,7 @@ public class RestaurantMenu {
     private static void Menu()
     {
         String input;
-        Integer numInput;
+        int numInput;
         boolean loop = true;
         boolean check = true;
         for (int i = 0; i < food.length; i++)
@@ -236,11 +200,10 @@ public class RestaurantMenu {
                 ColoredPrintln("error please try again", "red");
                 error = false;
             }
-            else ColoredPrintln("Please enter the item number to add it to your order:", "blue");
+            else ColoredPrint("Please enter the item number to add it to your order: ", "blue");
             numInput = scan.nextInt();
             for (int i = 0; i < food.length; i++)
             {
-                error = true;
                 if (numInput - 1 == i)
                 {
                     order.add(food[i][0].toString());
@@ -248,14 +211,16 @@ public class RestaurantMenu {
                     error = false;
                     break;
                 }
+                else error = true;
             }
             if (!error)
             {
+                check = true;
                 System.out.print("would you like to continue to payment or add another item ");
                 ColoredPrintln("1/2:", "blue");
                 while(check)
                 {
-                    input = scan.nextLine();
+                    input = scan.next();
                     switch (input)
                     {
                         case "1" ->
@@ -271,19 +236,113 @@ public class RestaurantMenu {
                         default -> ColoredPrintln("error please try again", "red");
                     }
                 }
-
             }
         }
-
     }
-    private static void order()
-    {
+    private static void order() {
+        String input;
 
+        for (int i = 0; i < order.size(); i++)
+        {
+            for (int j = 0; j < food.length; j++)
+            {
+                if (order.get(i) == food[j][0].toString())
+                {
+                    System.out.println(order.get(i) + " " + food[j][2]);
+                }
+            }
+        }
+        System.out.print("Would you like to change your order or continue to payment ");
+        ColoredPrint("1/2: ", "blue");
+        boolean loop = true;
+        while (loop)
+        {
+            input = scan.next();
+            switch (input)
+            {
+                case "1" ->
+                {
+                    for (int i = order.size(); i > 0; i--)
+                    {
+                        order.remove(i-1);
+                    }
+                    Menu();
+                    loop = false;
+                }
+                case "2" ->
+                {
+                    loop = false;
+                    receipt();
+                }
+                default -> ColoredPrintln("error please try again", "red");
+            }
+        }
     }
     private static void receipt()
     {
-
+        double tax = 8.38; //Tax rate
+        double taxTotal = 0; //Total tax in dollars
+        double subTotal = 0; //Price before tax
+        double Total = 0; //Price after tax
+        double cashAmount = 0; //Amount of cash given
+        double cashBack = 0; //Cash to give back
+        for (int i = 0; i < order.size(); i++)
+        {
+            for (int j = 0; j < food.length; j++)
+            {
+                if (order.get(i) == food[j][0].toString())
+                {
+                    subTotal += Double.parseDouble(food[j][2].toString());
+                }
+            }
+        }
+        subTotal = Math.round(subTotal * 100.0) / 100.0;
+        taxTotal = Math.round((subTotal * tax) * 0.01 * 100.0) / 100.0;
+        Total = Math.round((subTotal + taxTotal) * 100.0) / 100.0;
+        System.out.println("");
+        System.out.println("subTotal:  $" + subTotal);
+        System.out.println("tax:       $" + taxTotal);
+        System.out.println("Total:     $" + Total);
+        System.out.println("balance:   $" + balance);
+        if (Total > balance)
+        {
+            System.out.println("remainder: $" + (Total - balance));
+            balance = 0;
+            System.out.println("Please input cash amount: ");
+            cashAmount = scan.nextDouble();
+            cashBack = Math.round((cashAmount - Total) * 100.0) / 100.0;
+            System.out.println("cashBack:  $" + cashBack);
+            exit();
+        }
+        else
+        {
+            System.out.println("remainder: $0");
+            balance -= Total;
+            balance = Math.round(balance * 100.0) / 100.0;
+            System.out.println("remaining balance: $" + balance);
+            exit();
+        }
     }
+    private static void exit()
+    {
+        ColoredPrint("Thank you for using the ", "green");
+        ColoredPrintln("Restaurant Ordering System", "red");
+        for(int i = 0; i < accounts.size(); i++)
+        {
+            if (user.equals(accounts.get(i)))
+            {
+                accounts.add(i+2, String.valueOf(balance));
+                accounts.remove(i+3);
+            }
+        }
+        FileManager("null", true);
+        for (int i = 0; i < accounts.size(); i++)
+        {
+            FileManager(accounts.get(i), false);
+        }
+        System.exit(0);
+    }
+
     //Prints inputted text in a chosen color using ansi escape codes
     private static void ColoredPrintln(String txt, String color)
     {
